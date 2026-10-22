@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arbeidsdag</title>
+<style>body{font-family:system-ui,sans-serif;margin:0;padding:16px;max-width:600px;margin:auto;font-size:18px;background:#f6f6f6;color:#222}
+h1{font-size:26px}section{background:#fff;border-radius:12px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px #0002}h2{margin-top:0;font-size:22px}
+textarea{width:100%;box-sizing:border-box;min-height:140px;font-size:18px;padding:10px;border:1px solid #ccc;border-radius:8px}
+.row{display:flex;gap:8px}input[type=text]{flex:1;font-size:18px;padding:12px;border:1px solid #ccc;border-radius:8px;min-width:0}
+button{font-size:18px;padding:12px 16px;border:0;border-radius:8px;background:#2b6cb0;color:#fff;min-height:48px}
+ul{list-style:none;padding:0;margin:12px 0 0}li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #eee}
+li span{flex:1;word-break:break-word}li.done span{text-decoration:line-through;color:#888}input[type=checkbox]{width:34px;height:34px;flex:none}
+.del{background:#c53030;padding:8px 14px}small{color:#666}</style></head><body>
+<h1>Arbeidsdag</h1>
+<section><h2>Notater</h2><textarea id="notes" placeholder="Skriv notater før du drar..."></textarea><small>Lagres automatisk</small></section>
+<section><h2>Sjekkliste</h2><div class="row"><input type="text" id="ci" placeholder="Nytt punkt"><button id="ca">Legg til</button></div><ul id="cl"></ul></section>
+<section><h2>Spørsmål</h2><div class="row"><input type="text" id="qi" placeholder="Nytt spørsmål"><button id="qa">Legg til</button></div><ul id="ql"></ul></section>
+<script>
+const L=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}},S=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const n=document.getElementById('notes');n.value=localStorage.getItem('ad_notes')||'';n.oninput=()=>localStorage.setItem('ad_notes',n.value);
+let C=L('ad_check'),Q=L('ad_q');
+function el(t,x){const e=document.createElement(t);if(x)e.textContent=x;return e}
+function render(){const cl=document.getElementById('cl');cl.innerHTML='';C.forEach((it,i)=>{const li=el('li');if(it.d)li.className='done';const cb=el('input');cb.type='checkbox';cb.checked=it.d;cb.onchange=()=>{it.d=cb.checked;S('ad_check',C);render()};const d=el('button','Slett');d.className='del';d.onclick=()=>{C.splice(i,1);S('ad_check',C);render()};li.append(cb,el('span',it.t),d);cl.append(li)});
+const ql=document.getElementById('ql');ql.innerHTML='';Q.forEach((t,i)=>{const li=el('li');const d=el('button','Slett');d.className='del';d.onclick=()=>{Q.splice(i,1);S('ad_q',Q);render()};li.append(el('span','❓ '+t),d);ql.append(li)})}
+function add(inp,f){const v=inp.value.trim();if(v){f(v);inp.value='';render()}}
+const ci=document.getElementById('ci'),qi=document.getElementById('qi');
+document.getElementById('ca').onclick=()=>add(ci,v=>{C.push({t:v,d:false});S('ad_check',C)});
+document.getElementById('qa').onclick=()=>add(qi,v=>{Q.push(v);S('ad_q',Q)});
+ci.onkeydown=e=>{if(e.key==='Enter')document.getElementById('ca').click()};qi.onkeydown=e=>{if(e.key==='Enter')document.getElementById('qa').click()};
+render();
+</script></body></html>
