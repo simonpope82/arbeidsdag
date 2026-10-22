@@ -1,45 +1,47 @@
 <!DOCTYPE html><html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arbeidsdag</title>
 <style>
-body{font-family:system-ui,sans-serif;margin:0 auto;padding:14px;max-width:640px;font-size:18px;background:#f4f5f7;color:#222}
-h1{font-size:26px;margin:6px 0 14px}h2{font-size:21px;margin:0 0 10px}
+body{font-family:system-ui,sans-serif;margin:0 auto;padding:0 14px 14px;max-width:640px;font-size:18px;background:#f4f5f7;color:#222}
+h1{font-size:24px;margin:8px 0 4px}h2{font-size:20px;margin:0 0 6px}
+.bar{position:sticky;top:0;background:#f4f5f7;padding:10px 0 10px;z-index:5}
+.track{height:26px;background:#e2e8f0;border-radius:13px;overflow:hidden}.fill{height:100%;background:#2f855a;transition:width .3s}
+.pt{font-weight:700;margin-top:6px}
 section{background:#fff;border-radius:14px;padding:14px;margin-bottom:14px}
 textarea,input[type=text]{width:100%;box-sizing:border-box;font-size:17px;padding:10px;border:1px solid #ccc;border-radius:8px;font-family:inherit}
-.add{display:flex;gap:8px;margin-bottom:10px}.add input{flex:1;min-width:0}
+.add{display:flex;gap:8px;margin:10px 0}.add input{flex:1;min-width:0}
 button{font-size:17px;padding:10px 14px;border:0;border-radius:8px;background:#2f855a;color:#fff;min-height:46px}
 .item{border:1px solid #e2e2e2;border-radius:12px;padding:10px;margin-top:10px}
 .item.done{background:#f0fff4;border-color:#9ae6b4}
-.top{display:flex;align-items:center;gap:10px}
+.top{display:flex;align-items:flex-start;gap:10px;cursor:pointer}
 .top span{flex:1;font-weight:600;word-break:break-word}.item.done .top span{text-decoration:line-through;color:#777}
-input[type=checkbox]{width:32px;height:32px;flex:none}
-.item textarea{margin-top:8px;min-height:60px;font-size:16px}
+input[type=checkbox]{width:30px;height:30px;flex:none;margin:0}
+.item textarea{margin-top:8px;min-height:52px;font-size:16px}
 .del{background:#e2e8f0;color:#333;padding:6px 10px;min-height:38px;font-size:15px}
 .q{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid #eee}.q span{flex:1}
-small{color:#666}
 </style></head><body>
-<h1>Arbeidsdag</h1>
-<section><h2>Sjekkliste</h2>
-<div class="add"><input type="text" id="ci" placeholder="Nytt punkt"><button id="ca">Legg til</button></div>
-<div id="cl"></div><small>Notat ved hvert punkt lagres automatisk</small></section>
+<div class="bar"><h1>Sjekkliste: avslutning</h1><div class="track"><div class="fill" id="fill"></div></div><div class="pt" id="pt"></div></div>
+<div id="groups"></div>
+<section><h2>Egne punkter</h2><div class="add"><input type="text" id="ci" placeholder="Nytt punkt"><button id="ca">Legg til</button></div><div id="extra"></div></section>
 <section><h2>Notater</h2><textarea id="notes" style="min-height:110px" placeholder="Generelle notater..."></textarea></section>
-<section><h2>Spørsmål</h2>
-<div class="add"><input type="text" id="qi" placeholder="Nytt spørsmål"><button id="qa">Legg til</button></div><div id="ql"></div></section>
+<section><h2>Spørsmål</h2><div class="add"><input type="text" id="qi" placeholder="Nytt spørsmål"><button id="qa">Legg til</button></div><div id="ql"></div></section>
 <script>
-const L=k=>{try{return JSON.parse(localStorage.getItem(k))||[]}catch(e){return[]}},S=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const DATA=[{"g": "Før siste arbeidsdag: avtaler og HR", "items": ["Bekreft sluttdato og oppsigelsestid skriftlig (inkl. eventuell fritak fra arbeidsplikt)", "Avklar sluttavtale, hvis aktuelt", "Sjekk arbeidsavtalen for taushetsplikt, konkurranse- og kundeklausuler", "Avklar gjenstående ferie og avspasering (utbetaling eller avvikling)", "Hold sluttsamtale (hva fungerte, hva kan bli bedre, hvorfor slutter vedkommende)", "Skriv arbeidsattest (ansatte har rett til dette)"]}, {"g": "Kunnskapsoverføring", "items": ["Oversikt over kunder, kontaktpersoner og særavtaler vedkommende har ansvar for", "Gjennomgang av serviceruter, avtaler og uskrevne rutiner", "Åpne saker, pågående tilbud og lovnader til kunder", "Leverandørkontakter og avtaler", "Introduksjon av ny kontaktperson til de viktigste kundene", "Dokumenter egne notater og «det bare vedkommende vet»"]}, {"g": "Tilganger og IT", "items": ["E-post: sett autosvar og videresending til ny ansvarlig (avtal hva som skjer med privat korrespondanse før kontoen stenges eller gjennomgås)", "Deaktiver brukerkontoer (Microsoft 365/Google, VPN)", "Fjern tilgang i fagsystemer (CRM, regnskap, bestillingssystem, Tripletex, HubSpot e.l.)", "Bytt felles passord vedkommende kjenner", "Fjern fra passordbehandler og felles mapper/Teams/Slack", "Fjern tilgang til nettside, sosiale medier og eventuelle leverandørportaler", "Fjern fra to-faktor/BankID-oppsett knyttet til firma", "Overfør eierskap til dokumenter, kalendere og delte filer", "Oppdater signatur, nettside og kontaktlister"]}, {"g": "Utstyr og nøkler", "items": ["Nøkler (kontor, lager, biler, kunder)", "Adgangskort og alarmkoder (bytt koder hvis nødvendig)", "Bensinkort / firmakort / bankkort", "Firmabil, bomchip/AutoPASS og parkering", "Mobiltelefon, PC, nettbrett, lader (tilbakestill og avklar eventuelt nummeroverføring)", "Verktøy, uniform og arbeidstøy", "Kundenøkler/koder som vedkommende har hatt hos kunder", "Skriv kvittering på innlevert utstyr"]}, {"g": "Økonomi og lønn", "items": ["Sluttoppgjør: lønn, feriepenger, overtid", "Utestående reiseregninger og utlegg", "Avslutt eller overfør pensjonsordning (OTP) og forsikringer", "Meld endringer til lønnssystem og A-melding", "Fjern fullmakter, prokura og signaturrett i bank og i Brønnøysundregistrene (hvis aktuelt)", "Avklar eventuell etterlønn/bonus"]}, {"g": "Kommunikasjon", "items": ["Informer teamet", "Informer kunder og leverandører (hvem tar over, når og hvordan)", "Avtal hva som skal sies utad om avslutningen", "Planlegg en verdig avslutning: markering, gave eller tale"]}, {"g": "Etter siste dag", "items": ["Bekreft at alle tilganger er stengt", "Slett eller arkiver personopplysninger etter retningslinjer (personalmappe, GDPR)", "Følg opp at kunder har fått ny kontaktperson etter 2–4 uker"]}];
+const J=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}},S=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+let ST=J('ad2_state',{}),X=J('ad_check',[]),Q=J('ad_q',[]);
 const n=document.getElementById('notes');n.value=localStorage.getItem('ad_notes')||'';n.oninput=()=>localStorage.setItem('ad_notes',n.value);
-let C=L('ad_check'),Q=L('ad_q');
 function el(t,x,c){const e=document.createElement(t);if(x)e.textContent=x;if(c)e.className=c;return e}
-function render(){
-const cl=document.getElementById('cl');cl.innerHTML='';
-C.forEach((it,i)=>{const box=el('div','','item'+(it.d?' done':''));const top=el('div','','top');
-const cb=el('input');cb.type='checkbox';cb.checked=!!it.d;cb.onchange=()=>{it.d=cb.checked;S('ad_check',C);render()};
-const d=el('button','Slett','del');d.onclick=()=>{if(confirm('Slette punktet?')){C.splice(i,1);S('ad_check',C);render()}};
-top.append(cb,el('span',it.t),d);const ta=el('textarea');ta.placeholder='Notat til dette punktet...';ta.value=it.n||'';ta.oninput=()=>{it.n=ta.value;S('ad_check',C)};
-box.append(top,ta);cl.append(box)});
-const ql=document.getElementById('ql');ql.innerHTML='';
-Q.forEach((t,i)=>{const r=el('div','','q');const d=el('button','Slett','del');d.onclick=()=>{Q.splice(i,1);S('ad_q',Q);render()};r.append(el('span','❓ '+t),d);ql.append(r)})}
+function card(text,o,save,del){const box=el('div','','item'+(o.d?' done':''));const top=el('div','','top');const cb=el('input');cb.type='checkbox';cb.checked=!!o.d;
+const tog=()=>{o.d=!o.d;save();render()};cb.onclick=e=>{e.stopPropagation();tog()};top.onclick=e=>{if(e.target.tagName!=='BUTTON')tog()};
+top.append(cb,el('span',text));if(del){const d=el('button','Slett','del');d.onclick=e=>{e.stopPropagation();if(confirm('Slette punktet?'))del()};top.append(d)}
+const ta=el('textarea');ta.placeholder='Notat...';ta.value=o.n||'';ta.oninput=()=>{o.n=ta.value;save()};box.append(top,ta);return box}
+function render(){let tot=0,done=0;const G=document.getElementById('groups');G.innerHTML='';
+DATA.forEach((g,gi)=>{const s=el('section');s.append(el('h2',g.g));g.items.forEach((t,ii)=>{const k=gi+'_'+ii;const o=ST[k]||(ST[k]={d:false,n:''});tot++;if(o.d)done++;s.append(card(t,o,()=>S('ad2_state',ST)))});G.append(s)});
+const ex=document.getElementById('extra');ex.innerHTML='';X.forEach((it,i)=>{tot++;if(it.d)done++;ex.append(card(it.t,it,()=>S('ad_check',X),()=>{X.splice(i,1);S('ad_check',X);render()}))});
+const left=tot?Math.round((tot-done)/tot*100):0;document.getElementById('fill').style.width=(100-left)+'%';
+document.getElementById('pt').textContent=left+' % igjen ('+(tot-done)+' av '+tot+' punkter)';
+const ql=document.getElementById('ql');ql.innerHTML='';Q.forEach((t,i)=>{const r=el('div','','q');const d=el('button','Slett','del');d.onclick=()=>{Q.splice(i,1);S('ad_q',Q);render()};r.append(el('span','❓ '+t),d);ql.append(r)})}
 function add(inp,f){const v=inp.value.trim();if(v){f(v);inp.value='';render()}else inp.focus()}
 const ci=document.getElementById('ci'),qi=document.getElementById('qi');
-document.getElementById('ca').onclick=()=>add(ci,v=>{C.push({t:v,d:false,n:''});S('ad_check',C)});
+document.getElementById('ca').onclick=()=>add(ci,v=>{X.push({t:v,d:false,n:''});S('ad_check',X)});
 document.getElementById('qa').onclick=()=>add(qi,v=>{Q.push(v);S('ad_q',Q)});
 ci.onkeydown=e=>{if(e.key==='Enter')document.getElementById('ca').click()};qi.onkeydown=e=>{if(e.key==='Enter')document.getElementById('qa').click()};
 render();
